@@ -47,6 +47,23 @@
 
 #include "../libuuu/libuuu.h"
 
+char * g_vt_yellow = (char*)"\x1B[93m";
+char * g_vt_default = (char*) "\x1B[0m";
+char * g_vt_green = (char*)"\x1B[92m";
+char * g_vt_red = (char*)"\x1B[91m";
+char * g_vt_kcyn = (char*)"\x1B[36m";
+char * g_vt_boldwhite = (char*)"\x1B[97m";
+
+void clean_vt_color()
+{
+	g_vt_yellow = (char*)"";
+	g_vt_default = g_vt_yellow;
+	g_vt_green = g_vt_yellow;
+	g_vt_red = g_vt_yellow;
+	g_vt_kcyn = g_vt_yellow;
+	g_vt_boldwhite = g_vt_yellow;
+}
+
 using namespace std;
 
 int get_console_width();
@@ -101,7 +118,7 @@ public:
 void print_help(bool detail = false)
 {
 	const char help[] =
-		"uuu [-d -m -v -V] <" BOLDWHITE "bootloader|cmdlists|cmd" DEFAULT ">\n\n"
+		"uuu [-d -m -v -V] <" "bootloader|cmdlists|cmd" ">\n\n"
 		"    bootloader  download bootloader to board by usb\n"
 		"    cmdlist     run all commands in cmdlist file\n"
 		"                If it is path, search uuu.auto in dir\n"
@@ -115,7 +132,6 @@ void print_help(bool detail = false)
 		"uuu -s          Enter shell mode. uuu.inputlog record all input commands\n"
 		"                you can use \"uuu uuu.inputlog\" next time to run all commands\n\n"
 		"uuu -h -H       show help, -H means detail helps\n\n";
-	
 	printf("%s", help);
 	printf("uuu [-d -m -v] -b[run] ");
 	g_BuildScripts.ShowCmds();
@@ -212,8 +228,8 @@ string build_process_bar(size_t width, size_t pos, size_t total)
 
 	size_t start = (width - per.size()) / 2;
 	str.replace(start, per.size(), per);
-	str.insert(start, YELLOW);
-	str.insert(start + per.size() + strlen(YELLOW), DEFAULT);
+	str.insert(start, g_vt_yellow);
+	str.insert(start + per.size() + strlen(g_vt_yellow), g_vt_default);
 	return str;
 }
 
@@ -336,18 +352,18 @@ public:
 		{
 			if (nt->status)
 			{
-				cout << m_dev << ">" << RED <<"Fail " << uuu_get_last_err_string() << DEFAULT << endl;
+				cout << m_dev << ">" << g_vt_red <<"Fail " << uuu_get_last_err_string() << g_vt_default << endl;
 			}
 			else
 			{
-				cout << m_dev << ">" << GREEN << "Okay" << DEFAULT << endl;
+				cout << m_dev << ">" << g_vt_green << "Okay" << g_vt_default << endl;
 			}
 		}
 
 		if (nt->type == uuu_notify::NOTIFY_TRANS_POS)
 		{
 			if (m_trans_size)
-				cout << YELLOW << "\r" << m_trans_pos * 100 / m_trans_size <<"%" << DEFAULT;
+				cout << g_vt_yellow << "\r" << m_trans_pos * 100 / m_trans_size <<"%" << g_vt_default;
 			else
 				cout << ".";
 
@@ -414,14 +430,14 @@ public:
 					err = uuu_get_last_err_string();
 					err.resize(bar - 2, ' ');
 					str.replace(1, err.size(), err);
-					str.insert(1, RED);
-					str.insert(1 + strlen(RED) + err.size(), DEFAULT);
+					str.insert(1, g_vt_red);
+					str.insert(1 + strlen(g_vt_red) + err.size(), g_vt_default);
 				}
 				else
 				{
 					str.replace(1, 4, "Done");
-					str.insert(1, GREEN);
-					str.insert(1 + strlen(GREEN) + strlen("Done"), DEFAULT);
+					str.insert(1, g_vt_green);
+					str.insert(1 + strlen(g_vt_green) + strlen("Done"), g_vt_default);
 				}
 				cout << str;
 			} else {
@@ -504,7 +520,7 @@ int progress(uuu_notify nt, void *p)
 			str.format("\rSuccess %d    Failure %d    ", g_overall_okay, g_overall_failure);
 
 			if (g_map_path_nt.empty())
-				str += "Wait for Known USB Device Appear";
+				str += "Wait for Known USB Device Appear...";
 
 			if (!g_usb_path_filter.empty())
 			{
@@ -546,18 +562,21 @@ bool enable_vt_mode()
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hOut == INVALID_HANDLE_VALUE)
 	{
+		clean_vt_color();
 		return false;
 	}
 
 	DWORD dwMode = 0;
 	if (!GetConsoleMode(hOut, &dwMode))
 	{
+		clean_vt_color();
 		return false;
 	}
 
 	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	if (!SetConsoleMode(hOut, dwMode))
 	{
+		clean_vt_color();
 		return false;
 	}
 	return true;
@@ -588,16 +607,93 @@ void print_usb_filter()
 			cout << g_usb_path_filter[i] << " ";
 	}
 }
+
+int runshell(int shell)
+{
+	int uboot_cmd = 0;
+	string prompt = "U>";
+
+	if (shell)
+	{
+		cout << "Please input command: " << endl;
+		string cmd;
+		ofstream log("uuu.inputlog", ofstream::binary);
+		log << "uuu_version "
+			<< ((uuu_get_version() & 0xFF0000) >> 16)
+			<< "."
+			<< ((uuu_get_version() & 0xFF00) >> 8)
+			<< "."
+			<< ((uuu_get_version() & 0xFF))
+			<< endl;
+		while (1)
+		{
+			cout << prompt;
+			getline(cin, cmd);
+
+			if (cmd == "uboot")
+			{
+				uboot_cmd = 1;
+				prompt = "=>";
+				cout << "Enter into u-boot cmd mode" << endl;
+				cout << "Okay" << endl;
+			}
+			else if (cmd == "exit" && uboot_cmd == 1)
+			{
+				uboot_cmd = 0;
+				prompt = "U>";
+				cout << "Exit u-boot cmd mode" << endl;
+				cout << "Okay" << endl;
+			}else if (cmd == "help" || cmd == "?")
+			{
+				print_help();
+			}
+			else if (cmd == "q" || cmd == "quit")
+			{
+				return 0;
+			}
+			else
+			{
+				log << cmd << endl;
+				log.flush();
+
+				if (uboot_cmd)
+					cmd = "fb: ucmd " + cmd;
+
+				int ret = uuu_run_cmd(cmd.c_str());
+				if (ret)
+					cout << uuu_get_last_err_string() << endl;
+				else
+					cout << "Okay" << endl;
+			}
+		}
+		return 0;
+	}
+}
+
+int auto_complete(int argc, char**argv);
+void print_autocomplete_help();
+
 int main(int argc, char **argv)
 {
+	if (auto_complete(argc, argv) == 0)
+		return 0;
+
 	AutoCursor a;
 
 	print_version();
+	print_autocomplete_help();
 
-	enable_vt_mode();
+	if (!enable_vt_mode())
+	{
+		cout << "Your console don't support VT mode, fail back to verbose mode" << endl;
+		g_verbose = 1;
+	}
 
 	if (argc == 1)
+	{
 		print_help();
+		return 0;
+	}
 
 	int deamon = 0;
 	int shell = 0;
@@ -709,70 +805,33 @@ int main(int argc, char **argv)
 
 	if (g_verbose)
 	{
-		printf("%sBuild in config:%s\n", BOLDWHITE, DEFAULT);
+		printf("%sBuild in config:%s\n", g_vt_boldwhite, g_vt_default);
 		printf("\tPctl\t Chip\t\t Vid\t Pid\t BcdVersion\n");
 		printf("\t==================================================\n");
 		uuu_for_each_cfg(print_cfg, NULL);
 
 		if (!cmd_script.empty())
-			printf("\n%sRun built-in script:%s\n %s\n\n", BOLDWHITE, DEFAULT, cmd_script.c_str());
+			printf("\n%sRun built-in script:%s\n %s\n\n", g_vt_boldwhite, g_vt_default, cmd_script.c_str());
 
 		if (!shell)
-			cout << "Wait for Known USB Device Appear";
+			cout << "Wait for Known USB Device Appear...";
 
 		print_usb_filter();
 
 		printf("\n");
 	}
 	else {
-		cout << "Wait for Known USB Device Appear";
+		cout << "Wait for Known USB Device Appear...";
 		print_usb_filter();
 		cout << "\r";
 		cout << "\x1b[?25l";
+		cout.flush();
 	}
 
 	map<uint64_t, ShowNotify> nt_session;
 
 	uuu_register_notify_callback(progress, &nt_session);
 
-	if (shell)
-	{
-		cout << "Please input command: " << endl;
-		string cmd;
-		ofstream log("uuu.inputlog", ofstream::binary);
-		log << "uuu_version "
-			<< ((uuu_get_version() & 0xFF0000) >> 16)
-			<< "."
-			<< ((uuu_get_version() & 0xFF00) >> 8)
-			<< "."
-			<< ((uuu_get_version() & 0xFF))
-			<< endl;
-		while (1)
-		{
-			cout << "U>";
-			getline(cin, cmd);
-
-			if (cmd == "help" || cmd == "?")
-			{
-				print_help();
-			}
-			else if (cmd == "q" || cmd == "quit")
-			{
-				return 0;
-			}else
-			{
-				log << cmd << endl;
-				log.flush();
-
-				int ret = uuu_run_cmd(cmd.c_str());
-				if (ret)
-					cout << uuu_get_last_err_string() << endl;
-				else
-					cout << "Okay" << endl;
-			}
-		}
-		return 0;
-	}
 
 	if (!cmd.empty())
 	{
@@ -783,8 +842,9 @@ int main(int argc, char **argv)
 		if(ret)
 			printf("\nError: %s\n", uuu_get_last_err_string());
 		else
-			printf("Okay");
+			printf("Okay\n");
 
+		runshell(shell);
 		return ret;
 	}
 
@@ -795,11 +855,15 @@ int main(int argc, char **argv)
 
 	if (ret)
 	{
-		cout << RED << "\nError: " << DEFAULT <<  uuu_get_last_err_string();
+		runshell(shell);
+
+		cout << g_vt_red << "\nError: " << g_vt_default <<  uuu_get_last_err_string();
 		return ret;
 	}
 
 	uuu_wait_uuu_finish(deamon);
+
+	runshell(shell);
 
 	/*Wait for the other thread exit, after send out CMD_DONE*/
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));

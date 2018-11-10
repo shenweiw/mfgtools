@@ -37,6 +37,7 @@
 #include "buffer.h"
 #include "sdp.h"
 #include "rominfo.h"
+#include "libusb.h"
 
 IvtHeader *SDPCmdBase::search_ivt_header(shared_ptr<FileBuffer> data, size_t &off)
 {
@@ -159,6 +160,10 @@ int SDPBootCmd::run(CmdCtx *ctx)
 		if (jmp.parser()) return -1;
 		if (jmp.run(ctx)) return -1;
 	}
+
+	SDPBootlogCmd log(NULL);
+	log.run(ctx);
+
 	return 0;
 }
 
@@ -221,6 +226,11 @@ int SDPWriteCmd::run(CmdCtx*ctx)
 		m_download_addr = pIvt->SelfAddr;
 		//size = fbuff->size() - off;
 		size = pDB->ImageSize;
+
+		//ImageSize may be bigger than Imagesize because ImageSize include IVT offset
+		//Difference boot storage have difference IVT offset. 
+		if (size > fbuff->size() - off)
+			size = fbuff->size() - off;
 
 		pbuff = (uint8_t*)pIvt;
 	}
@@ -311,13 +321,25 @@ int SDPJumpCmd::run(CmdCtx *ctx)
 	}
 	else
 	{	/*Clear DCD*/
-		IvtHeader header;
-		header = *pIVT;
+		vector<uint8_t> ivt;
+		/* Need send out whole report size buffer avoid overwrite other data
+		 * Some platform require receive whole package for report id = 2
+		 */
+		ivt.resize(report.get_out_package_size());
 
-		header.DCDAddress = 0;
+		size_t sz = buff->size();
+		sz -= (uint8_t*)pIVT - (uint8_t*)buff->data();
+
+		if (sz > ivt.size())
+			sz = ivt.size();
+
+		memcpy(ivt.data(), pIVT, sz);
+
+		IvtHeader *header = (IvtHeader *)ivt.data();
+		header->DCDAddress = 0;
 
 		SDPWriteCmd writecmd(NULL);
-		if(writecmd.run(ctx, &header, sizeof(header), pIVT->SelfAddr))
+		if(writecmd.run(ctx, header, ivt.size(), pIVT->SelfAddr))
 			return -1;
 	}
 
@@ -327,5 +349,38 @@ int SDPJumpCmd::run(CmdCtx *ctx)
 	//Omit last return value.
 	check_ack(&report, ROM_OK_ACK);
 
+	return 0;
+}
+
+int SDPBootlogCmd::run(CmdCtx *ctx)
+{
+	HIDTrans dev;
+	dev.m_read_timeout = 2000;
+
+	if (dev.open(ctx->m_dev))
+		return -1;
+
+	HIDReport report(&dev);
+
+	vector<uint8_t> v(65);
+	v[0] = 'I';
+
+	uuu_notify nt;
+	nt.type = uuu_notify::NOTIFY_CMD_INFO;
+	
+	int ret;
+	while (1)
+	{
+		ret = report.read(v);
+		if (ret)
+			return 0;
+		else
+		{
+			nt.str = (char*)(v.data() + 4);
+			v[5] = 0;
+			call_notify(nt);
+			continue;
+		}
+	}
 	return 0;
 }

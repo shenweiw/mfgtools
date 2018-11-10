@@ -47,10 +47,11 @@ include_directories(${generated_files_dir})
 set(SOURCES
 	uuu.cpp
 	buildincmd.cpp
+	autocomplete.cpp
 	${CLSTS}
 )
 
 add_executable(uuu ${SOURCES})
-target_link_libraries(uuu uuc_s  ${LIBUSB_LIBRARIES} ${LIBZIP_LIBRARIES} ${LIBZ_LIBRARIES})
+target_link_libraries(uuu uuc_s  ${LIBUSB_LIBRARIES} ${LIBZIP_LIBRARIES} ${LIBZ_LIBRARIES} bz2)
 
 install(TARGETS uuu DESTINATION bin)

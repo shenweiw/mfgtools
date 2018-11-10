@@ -15,19 +15,38 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\uuu\uuu.cpp">
+    <ClCompile Include="..\bzip2\blocksort.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\uuu\buildincmd.cpp">
+    <ClCompile Include="..\bzip2\bzip2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\uuu\autocomplete.cpp">
+    <ClCompile Include="..\bzip2\bzip2recover.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\uuu\buildincmd.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClCompile Include="..\bzip2\bzlib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\compress.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\crctable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\decompress.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\huffman.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\mk251.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\randtable.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\bzip2\spewG.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
