@@ -44,8 +44,8 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include <stdio.h>  
-#include <stdlib.h>  
+#include <stdio.h>
+#include <stdlib.h>
 
 static CmdMap g_cmd_map;
 static CmdObjCreateMap g_cmd_create_map;
@@ -164,6 +164,9 @@ int CmdList::run_all(CmdCtx *p, bool dry_run)
 			nt.type = uuu_notify::NOTIFY_CMD_END;
 			nt.status = ret;
 			call_notify(nt);
+			SDPBootlogCmd log(NULL);
+			log.run(p);
+
 			if (ret)
 				return ret;
 		}
@@ -447,7 +450,7 @@ int CmdShell::run(CmdCtx*)
 			str.resize(strlen(str.c_str()));
 			cmd += ' ';
 			cmd += str;
-			
+
 			size_t pos = cmd.find_first_of("\r\n");
 			if (pos != string::npos)
 				cmd = cmd.substr(0, pos);
