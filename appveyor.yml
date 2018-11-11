@@ -61,7 +61,7 @@ build_script:
     
 - sh: echo "</revhistory>" >> UUU-docinfo.xml
     
-- sh: a2x -L -a docinfo UUU
+- sh: a2x -L -a docinfo UUU-docinfo.xml
     
 artifacts:
 - path: uuu.exe
