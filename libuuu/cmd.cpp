@@ -164,8 +164,8 @@ int CmdList::run_all(CmdCtx *p, bool dry_run)
 			nt.type = uuu_notify::NOTIFY_CMD_END;
 			nt.status = ret;
 			call_notify(nt);
-			SDPBootlogCmd log(NULL);
-			log.run(p);
+		//	SDPBootlogCmd log(NULL);
+		//	log.run(p);
 
 			if (ret)
 				return ret;

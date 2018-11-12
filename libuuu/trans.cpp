@@ -157,6 +157,8 @@ int BulkTrans::write(void *buff, size_t size)
 			&actual_lenght,
 			m_timeout
 		);
+	printf("[%s] %d ret=%d@0x%x\r\n", __func__, __LINE__, ret, m_ep_out.addr);
+	printf("data=%s size=%d dev=%p\r\n", p, sz, m_devhandle);
 
 		if (ret < 0)
 		{
@@ -165,6 +167,7 @@ int BulkTrans::write(void *buff, size_t size)
 			err = "Bulk(W):";
 			err += libusb_error_name(ret);
 			set_last_err_string(err);
+	the_thread = std::thread(&BulkTrans::ThreadMain,this);
 			return ret;
 		}
 	}
@@ -180,6 +183,7 @@ int BulkTrans::write(void *buff, size_t size)
 			&actual_lenght,
 			2000
 		);
+	printf("[%s] %d ret=%d\r\n", __func__, __LINE__, ret);
 
 		if (ret < 0)
 		{
@@ -192,13 +196,16 @@ int BulkTrans::write(void *buff, size_t size)
 		}
 	}
 
+	the_thread = std::thread(&BulkTrans::ThreadMain,this);
 	return ret;
 }
 
 int BulkTrans::open(void *p)
 {
+	printf("[%s] %d ret=%d\r\n", __func__, __LINE__, 0);
 	if (USBTrans::open(p))
 		return -1;
+	printf("[%s] %d ret=%d\r\n", __func__, __LINE__, 0);
 
 	for (size_t i = 0; i < m_EPs.size(); i++)
 	{
@@ -212,11 +219,25 @@ int BulkTrans::open(void *p)
 	}
 	return 0;
 }
+
 int BulkTrans::read(void *buff, size_t size, size_t *rsize)
+{
+	while(m_done == false){
+		std::this_thread::sleep_for( std::chrono::seconds(1));
+		printf("Waiting...");
+	}
+
+	printf("[%s] %d\r\n", __func__, __LINE__);
+
+	return 0;
+}
+
+int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
 {
 	int ret;
 	int actual_lenght;
 	uint8_t *p = (uint8_t *)buff;
+	printf("[%s]Start to receive\r\n", __func__);
 	ret = libusb_bulk_transfer(
 		(libusb_device_handle *)m_devhandle,
 		m_ep_in.addr,
@@ -235,8 +256,10 @@ int BulkTrans::read(void *buff, size_t size, size_t *rsize)
 		err = "Bulk(R):";
 		err += libusb_error_name(ret);
 		set_last_err_string(err);
+		printf("error exit ret=%d\r\n", ret);
 		return ret;
 	}
-
+	p[actual_lenght] = 0;
+	printf((const char*)p);
 	return ret;
 }

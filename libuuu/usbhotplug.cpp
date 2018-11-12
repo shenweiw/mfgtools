@@ -76,6 +76,7 @@ static string get_device_path(libusb_device *dev)
 	str.format("%d:", bus);
 
 	int ret = libusb_get_port_numbers(dev, path, sizeof(path));
+	printf("\r\n%s %d ret=%d\r\n", __func__, __LINE__, ret);
 	if (ret < 0)
 		return "";
 
@@ -88,6 +89,10 @@ static string get_device_path(libusb_device *dev)
 		s.format("%d", path[j]);
 		str.append(s);
 	}
+	printf("%s -> %s bus=%d len=%d\r\n", __func__, str.c_str(), bus, ret);
+	printf("path= %02x %02x %02x %02x %02x %02x %02x %02x\r\n",
+			path[0], path[1], path[2], path[3],
+			path[4], path[5], path[6], path[7]);
 	return str;
 }
 
@@ -96,6 +101,7 @@ static int run_usb_cmds(ConfigItem *item, libusb_device *dev)
 	int ret;
 	uuu_notify nt;
 	nt.type = uuu_notify::NOFITY_DEV_ATTACH;
+printf("%s %d\r\n", __func__, __LINE__);
 
 	string str;
 	str = get_device_path(dev);
@@ -141,7 +147,7 @@ static int usb_add(libusb_device *dev)
 		set_last_err_string("failure get device descrior");
 		return r;
 	}
-
+printf("%s %d\r\n", __func__, __LINE__);
 	string str;
 	str = get_device_path(dev);
 	if (!is_match_filter(str))
@@ -268,6 +274,7 @@ int CmdUsbCtx::look_for_match_device(const char *pro)
 	if (run_cmds("CFG:", NULL))
 		return -1;
 
+printf("%s %d\r\n", __func__, __LINE__);
 	while (1)
 	{
 		libusb_device **newlist = NULL;
@@ -279,12 +286,14 @@ int CmdUsbCtx::look_for_match_device(const char *pro)
 		{
 			struct libusb_device_descriptor desc;
 			int r = libusb_get_device_descriptor(dev, &desc);
+printf("%s %d\r\n", __func__, __LINE__);
 			if (r < 0) {
 				set_last_err_string("failure get device descrior");
 				return -1;
 			}
 			string str = get_device_path(dev);
 
+			printf("%s %d %s\r\n", __func__, __LINE__, str.c_str());
 			if (!is_match_filter(str))
 				continue;
 
@@ -307,9 +316,11 @@ int CmdUsbCtx::look_for_match_device(const char *pro)
 					{
 						set_last_err_string("Failure open usb device" TRY_SUDO);
 						libusb_free_device_list(list, 1);
+printf("%s %d\r\n", __func__, __LINE__);
 						return -1;
 					}
-
+printf("%s %d dev=%p\r\n", __func__, __LINE__, m_dev);
+					//str = get_device_path(dev);
 					libusb_free_device_list(list, 1);
 					nt.str = (char*)str.c_str();
 					call_notify(nt);

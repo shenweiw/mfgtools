@@ -31,6 +31,9 @@
 #include <vector>
 #include <string>
 #include <atomic>
+#include <thread>
+#include <chrono>
+#include <string.h>
 
 #pragma once
 
@@ -79,10 +82,34 @@ class HIDTrans : public USBTrans
 	int m_set_report;
 public:
 	int m_read_timeout;
-	HIDTrans() { m_set_report = 9; m_read_timeout = 1000; }
-	~HIDTrans() { if (m_devhandle) close();  m_devhandle = NULL;  }
+	HIDTrans():the_thread(){ m_set_report = 9; m_read_timeout = 1000; }
+	~HIDTrans() { if (m_devhandle) close();  m_devhandle = NULL;
+		stop_thread = true;
+		if(the_thread.joinable())
+			the_thread.join();
+		printf("%s %d\r\n", __func__, __LINE__);
+	}
 	int write(void *buff, size_t size);
 	int read(void *buff, size_t size, size_t *return_size);
+
+private:
+    thread the_thread;
+    bool stop_thread = false; // Super simple thread stopping.
+	char m_buff[65];
+	bool m_done;
+    void ThreadMain(){
+		size_t actual;
+        while(!stop_thread){
+            // Do something useful, e.g:
+            //std::this_thread::sleep_for( std::chrono::seconds(1) );
+			m_done = false;
+			memset(m_buff, 0, 65);
+			printf("Thread %p is running\r\n", this);
+			while ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
+				continue;
+			m_done = true;
+        }
+    }
 };
 
 class BulkTrans : public USBTrans
@@ -101,15 +128,44 @@ public:
 	int m_b_send_zero;
 	uint64_t m_timeout;
 
-	BulkTrans() {
+	BulkTrans():the_thread() {
 		Init();
 	}
 
 	virtual int open(void *p);
 
-	~BulkTrans() { if (m_devhandle) close();  m_devhandle = NULL; }
+	~BulkTrans() {
+		if (m_devhandle) close();
+		m_devhandle = NULL;
+		stop_thread = true;
+		if(the_thread.joinable())
+			the_thread.join();
+		printf("%s %d\r\n", __func__, __LINE__);
+	}
+
 	int write(void *buff, size_t size);
 	int read(void *buff, size_t size, size_t *return_size);
+	int read_thread(void *buff, size_t size, size_t *rsize);
+
+private:
+    thread the_thread;
+    bool stop_thread = false; // Super simple thread stopping.
+	char m_buff[65];
+	bool m_done;
+    void ThreadMain(){
+		size_t actual;
+        while(!stop_thread){
+            // Do something useful, e.g:
+            //std::this_thread::sleep_for( std::chrono::seconds(1) );
+			m_done = false;
+			memset(m_buff, 0, 65);
+			printf("Thread %p is running\r\n", this);
+			read_thread(m_buff, 64, &actual);
+			while ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
+				continue;
+			m_done = true;
+        }
+    }
 };
 
 int polling_usb(std::atomic<int>& bexit);
