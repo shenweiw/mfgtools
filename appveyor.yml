@@ -4,13 +4,11 @@ image:
 - Ubuntu1804
 
 configuration: 
-- Debug
 - Release
 
 platform:
- - x86
  - x64
- 
+
 init:
  - sh: if [ "${CONFIGURATION}" = "Debug" ] ; then exit 0; fi
  - sh: if [ "${PLATFORM}" = "x86" ]; then exit 0; fi 
