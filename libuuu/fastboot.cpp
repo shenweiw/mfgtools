@@ -50,13 +50,11 @@ int FastBoot::Transport(string cmd, void *p, size_t size, vector<uint8_t> *input
 		return -1;
 
 	char buff[65];
-	size_t actual;
 	memset(buff, 0, 65);
-	m_pTrans->read(buff, 64, &actual);
 
 	while ( strncmp(buff, "OKAY", 4) && strncmp(buff, "FAIL", 4))
 	{
-		actual  = 0;
+		size_t actual;
 		memset(buff, 0, 65);
 		if (m_pTrans->read(buff, 64, &actual))
 			return -1;
