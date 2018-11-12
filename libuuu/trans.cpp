@@ -260,6 +260,6 @@ int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
 		return ret;
 	}
 	p[actual_lenght] = 0;
-	printf((const char*)p);
+	printf("[%s] str=%s\r\n", __func__, (const char*)p);
 	return ret;
 }
