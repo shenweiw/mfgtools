@@ -160,15 +160,18 @@ private:
             //std::this_thread::sleep_for( std::chrono::seconds(1) );
 			m_done = false;
 			memset(m_buff, 0, 65);
-			printf("Thread %p is running\r\n", this);
 			ret = read_thread(m_buff, 64, &actual);
+			printf("Thread %p is running size=%lu buf=%s\r\n", this, actual, m_buff);
 			if(ret < 0){
-				printf("No data received! break here\r\n");
+				printf("No data received! break here m_done=%d ret=%d\r\n",
+						m_done, ret);
+				m_done = false;
 				break;
 			}
-			if ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
-				continue;
-			m_done = true;
+			if (!strncmp(m_buff, "OKAY", 4))
+			   m_done = true;
+			if (!strncmp(m_buff, "FAIL", 4))
+			   m_done = true;
         }
     }
 };
