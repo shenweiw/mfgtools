@@ -156,14 +156,14 @@ private:
 		int ret;
 		size_t actual;
 		m_done = false;
+		memset(m_buff, 0, 65);
         while(!stop_thread){
             // Do something useful, e.g:
             //std::this_thread::sleep_for( std::chrono::seconds(1) );
 			char buff[65];
 			memset(buff, 0, 65);
-			memset(m_buff, 0, 65);
 			ret = read_thread(buff, 64, &actual);
-			printf("Thread %p is running size=%lu buf=%s\r\n", this, actual, m_buff);
+			printf("Thread %p is running size=%lu buf=%s\r\n", this, actual, buff);
 			if((ret < 0) && (m_done==true)) {
 				printf("No data received! break here m_done=%d ret=%d\r\n",
 						m_done, ret);
@@ -174,7 +174,7 @@ private:
 				strncmp(m_buff, "OKAY", 4);
 			   m_done = true;
 			}
-			if (!strncmp(m_buff, "FAIL", 4)){
+			if (!strncmp(buff, "FAIL", 4)){
 				printf("CMD fail!\r\n");
 				strncmp(m_buff, "FAIL", 4);
 			   m_done = true;
