@@ -28,6 +28,7 @@
 * POSSIBILITY OF SUCH DAMAGE.
 *
 */
+#define _CRT_SECURE_NO_WARNINGS
 
 #include "trans.h"
 #include "libuuu.h"
