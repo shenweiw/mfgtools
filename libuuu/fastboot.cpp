@@ -58,6 +58,7 @@ int FastBoot::Transport(string cmd, void *p, size_t size, vector<uint8_t> *input
 		memset(buff, 0, 65);
 		if (m_pTrans->read(buff, 64, &actual))
 			return -1;
+printf("[%s] %d buff=%s\r\n", __func__, __LINE__, buff);
 
 		if (strncmp(buff, "DATA",4) == 0)
 		{
@@ -90,7 +91,7 @@ int FastBoot::Transport(string cmd, void *p, size_t size, vector<uint8_t> *input
 			call_notify(nt);
 		}
 	}
-
+printf("[%s] %d buff=%s\r\n", __func__, __LINE__, buff);
 	if (strncmp(buff, "OKAY", 4) == 0)
 		return 0;
 
