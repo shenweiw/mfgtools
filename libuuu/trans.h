@@ -161,7 +161,7 @@ private:
 			memset(m_buff, 0, 65);
 			printf("Thread %p is running\r\n", this);
 			read_thread(m_buff, 64, &actual);
-			while ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
+			if ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
 				continue;
 			m_done = true;
         }
