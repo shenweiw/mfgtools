@@ -141,6 +141,9 @@ int BulkTrans::write(void *buff, size_t size)
 {
 	int ret;
 	int actual_lenght;
+
+	m_done = false;
+
 	for (size_t i = 0; i < size; i += m_MaxTransPreRequest)
 	{
 		uint8_t *p = (uint8_t *)buff;
@@ -223,16 +226,23 @@ int BulkTrans::open(void *p)
 
 int BulkTrans::read(void *buff, size_t size, size_t *rsize)
 {
-	while(m_done == false){
-		std::this_thread::sleep_for( std::chrono::seconds(1));
-		printf("Waiting...");
+	int ret = 0;
+
+	if (m_done == false) {
+		while(m_done == false){
+			std::this_thread::sleep_for( std::chrono::seconds(1));
+			printf("Waiting...");
+		}
+
+		strncpy((char *)buff, m_buff, size);
+		*rsize = strlen(m_buff);
+	}else{
+		ret = -1;
 	}
 
-	strncpy((char *)buff, m_buff, size);
-	*rsize = strlen(m_buff);
-	printf("[%s] %d\r\n", __func__, __LINE__);
+	printf("[%s] %d ret=%d\r\n", __func__, __LINE__, ret);
 
-	return 0;
+	return ret;
 }
 
 int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
