@@ -153,6 +153,7 @@ private:
 	char m_buff[65];
 	bool m_done;
     void ThreadMain(){
+		int ret;
 		size_t actual;
         while(!stop_thread){
             // Do something useful, e.g:
@@ -160,7 +161,11 @@ private:
 			m_done = false;
 			memset(m_buff, 0, 65);
 			printf("Thread %p is running\r\n", this);
-			read_thread(m_buff, 64, &actual);
+			ret = read_thread(m_buff, 64, &actual);
+			if(ret < 0){
+				printf("No data received! break here\r\n");
+				break;
+			}
 			if ( strncmp(m_buff, "OKAY", 4) && strncmp(m_buff, "FAIL", 4))
 				continue;
 			m_done = true;
