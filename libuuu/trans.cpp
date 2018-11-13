@@ -249,7 +249,6 @@ int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
 	int ret;
 	int actual_lenght;
 	uint8_t *p = (uint8_t *)buff;
-	printf("[%s]Start to receive\r\n", __func__);
 	ret = libusb_bulk_transfer(
 		(libusb_device_handle *)m_devhandle,
 		m_ep_in.addr,
@@ -268,10 +267,7 @@ int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
 		err = "Bulk(R):";
 		err += libusb_error_name(ret);
 		set_last_err_string(err);
-		printf("error exit ret=%d\r\n", ret);
 		return ret;
 	}
-	p[actual_lenght] = 0;
-	printf("[%s] str=%s\r\n", __func__, (const char*)p);
 	return ret;
 }
