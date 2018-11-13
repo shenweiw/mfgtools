@@ -266,7 +266,8 @@ int BulkTrans::read_thread(void *buff, size_t size, size_t *rsize)
 		string err;
 		err = "Bulk(R):";
 		err += libusb_error_name(ret);
-		set_last_err_string(err);
+		//set_last_err_string(err);
+		printf(err.c_str());
 		return ret;
 	}
 	return ret;
