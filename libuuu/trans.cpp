@@ -233,7 +233,9 @@ int BulkTrans::read(void *buff, size_t size, size_t *rsize)
 			printf("Waiting...");
 		}
 
-	}
+	}else{
+        ret = -1;
+    }
 
 	strncpy((char *)buff, m_buff, size);
 	*rsize = strlen(m_buff);
